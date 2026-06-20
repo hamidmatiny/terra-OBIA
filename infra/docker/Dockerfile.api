@@ -1,0 +1,23 @@
+# Terra OBIA API — development image (placeholder)
+#
+# Build and run once processing dependencies are implemented:
+#   docker build -f infra/docker/Dockerfile.api -t terra-obia-api .
+#   docker run -p 8000:8000 terra-obia-api
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+RUN pip install poetry
+
+COPY pyproject.toml poetry.lock* ./
+COPY core/ core/
+COPY api/ api/
+COPY pipeline/ pipeline/
+
+RUN poetry config virtualenvs.create false \
+    && poetry install --no-interaction --no-ansi --only main
+
+EXPOSE 8000
+
+CMD ["uvicorn", "terra_api.main:app", "--host", "0.0.0.0", "--port", "8000"]

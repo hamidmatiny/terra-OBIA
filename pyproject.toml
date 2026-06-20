@@ -1,0 +1,80 @@
+[tool.poetry]
+name = "terra-obia"
+version = "0.1.0"
+description = "Object-Based Image Analysis platform for forestry stand delineation, wetland classification, and land cover mapping"
+authors = ["Terra OBIA Team"]
+readme = "README.md"
+packages = [
+    { include = "terra_core", from = "core" },
+    { include = "terra_api", from = "api" },
+    { include = "terra_pipeline", from = "pipeline" },
+]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "^0.115.0"
+uvicorn = { extras = ["standard"], version = "^0.32.0" }
+pydantic = "^2.0"
+pydantic-settings = "^2.0"
+rasterio = "^1.4.0"
+geopandas = "^1.0.0"
+shapely = "^2.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.0"
+pytest-cov = "^6.0"
+mypy = "^1.13"
+ruff = "^0.8.0"
+httpx = "^0.28.0"
+types-shapely = "^2.0.0"
+
+[tool.poetry.scripts]
+terra-api = "terra_api.main:run"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["core", "api", "pipeline", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",
+    "F",
+    "I",
+    "N",
+    "W",
+    "UP",
+    "B",
+    "SIM",
+    "TCH",
+    "D",
+]
+ignore = ["D100", "D104", "TC003"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_return_any = true
+warn_unused_configs = true
+mypy_path = "core:api:pipeline"
+packages = ["terra_core", "terra_api", "terra_pipeline"]
+
+[[tool.mypy.overrides]]
+module = ["rasterio.*", "geopandas.*", "shapely.*"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["core", "api", "pipeline"]
+addopts = "-v --tb=short"
+
+[tool.coverage.run]
+source = ["terra_core", "terra_api", "terra_pipeline"]
+omit = ["tests/*"]
