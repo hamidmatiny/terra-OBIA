@@ -39,7 +39,7 @@ terra-OBIA/
 |--------|----------------|------------|
 | `core` | Geospatial I/O (COG window reads), segmentation interfaces, classification interfaces | GDAL/rasterio stack |
 | `pipeline` | Ingestion (COG/GeoTIFF/Sentinel-2), spatial tiling, SQLite tile catalog, validation, job orchestration | `core` |
-| `api` | REST endpoints, request validation, job status | `pipeline`, `core` |
+| `api` | REST endpoints, job orchestration, GIS export delivery | `pipeline`, `core` |
 | `web` | Operator dashboard (future) | `api` |
 | `infra` | Containers, cloud resources, deployment | all services |
 
@@ -163,15 +163,18 @@ generation, SQLite catalog persistence, and lazy streaming reads. The
 **segmentation module** implements classical and deep tile segmenters, object
 feature extraction, and overlap-aware mosaic merge. The **classification module**
 implements forest stand delineation with trainable gradient boosting models,
-versioned artifacts, and Markdown accuracy reports. `terra_core` COG I/O remains
-a stub. See [pipeline.md](./pipeline.md), [segmentation.md](./segmentation.md),
-and [classification.md](./classification.md).
+versioned artifacts, and Markdown accuracy reports. The **API module** exposes
+job submission, progress polling, model listing, and GIS export delivery via
+FastAPI. `terra_core` COG I/O remains a stub. See [pipeline.md](./pipeline.md),
+[segmentation.md](./segmentation.md), [classification.md](./classification.md),
+and [api.md](./api.md).
 
 ## Related documentation
 
 - [Pipeline module](./pipeline.md)
 - [Segmentation module](./segmentation.md)
 - [Classification module](./classification.md)
+- [API reference](./api.md)
 - [ADR-0001: COG and tiled processing](./decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation over multiresolution segmentation](./decisions/ADR-0002-learned-segmentation.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Documentation and PR standards
