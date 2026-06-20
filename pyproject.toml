@@ -24,6 +24,8 @@ geopandas = "^1.0.0"
 shapely = "^2.0.0"
 pyproj = "^3.6.0"
 scikit-image = "^0.24.0"
+scikit-learn = "^1.5.0"
+joblib = "^1.4.0"
 torch = "^2.5.0"
 torchvision = "^0.20.0"
 
@@ -37,6 +39,7 @@ types-shapely = "^2.0.0"
 
 [tool.poetry.scripts]
 terra-api = "terra_api.main:run"
+terra-train-stand-classifier = "terra_core.classification.scripts.train_stand_classifier:main"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
@@ -82,6 +85,9 @@ module = [
     "rioxarray.*",
     "numpy.*",
     "skimage.*",
+    "sklearn.*",
+    "joblib.*",
+    "pandas.*",
     "torch.*",
     "torchvision.*",
 ]

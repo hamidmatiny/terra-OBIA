@@ -124,8 +124,9 @@ Modules communicate through narrow interfaces, not shared global state:
 - **`SegmentationModel`** (`core`) — Pluggable tile segmenters (SLIC classical,
   FCN deep learning) producing label rasters and object features; includes
   overlap-aware mosaic merge.
-- **`ClassificationModel`** (`core`) — Segment classifier contract; no knowledge
-  of storage or HTTP.
+- **`ClassificationModel`** (`core`) — Pluggable object classifiers; stand
+  delineation workflow implemented with versioned gradient boosting models,
+  accuracy reporting, and audit logging.
 - **`CogConverter` / `TileGrid` / `TileCatalog` / `StreamingTileReader`** (`pipeline`) — Format conversion, spatial partitioning, catalog persistence, and lazy I/O; no embedded ML logic.
 - **`process_tile`** (`pipeline`) — Pure per-tile task function for local or distributed execution.
 - **`JobRunner`** (`pipeline`) — Wires stages together from workflow config.
@@ -160,14 +161,17 @@ and learned segmentation vs. classical multiresolution segmentation.
 The **pipeline module** implements ingestion, validation, overlapping tile
 generation, SQLite catalog persistence, and lazy streaming reads. The
 **segmentation module** implements classical and deep tile segmenters, object
-feature extraction, and overlap-aware mosaic merge. Classification and
-`terra_core` COG I/O remain stubs. See [pipeline.md](./pipeline.md) and
-[segmentation.md](./segmentation.md).
+feature extraction, and overlap-aware mosaic merge. The **classification module**
+implements forest stand delineation with trainable gradient boosting models,
+versioned artifacts, and Markdown accuracy reports. `terra_core` COG I/O remains
+a stub. See [pipeline.md](./pipeline.md), [segmentation.md](./segmentation.md),
+and [classification.md](./classification.md).
 
 ## Related documentation
 
 - [Pipeline module](./pipeline.md)
 - [Segmentation module](./segmentation.md)
+- [Classification module](./classification.md)
 - [ADR-0001: COG and tiled processing](./decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation over multiresolution segmentation](./decisions/ADR-0002-learned-segmentation.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Documentation and PR standards

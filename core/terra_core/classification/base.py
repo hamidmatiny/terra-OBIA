@@ -1,27 +1,57 @@
-"""Base interfaces for segment classification models."""
+"""Base interfaces for segment-level classification workflows."""
 
 from __future__ import annotations
 
 from abc import ABC, abstractmethod
-from typing import Any
+
+import geopandas as gpd
+
+from terra_core.classification.config import ClassificationConfig
+from terra_core.classification.models import ClassificationResult
+from terra_core.segmentation.models import TileSegmentationResult
 
 
 class ClassificationModel(ABC):
-    """Abstract classifier for segment-level thematic labeling.
+    """Abstract classifier for OBIA object-level thematic labeling.
 
-    Classifiers operate on feature vectors derived from segmented objects.
-    Geographic context (CRS, area units) must be encoded in features upstream;
-    this interface does not perform coordinate transforms.
+    Implementations consume segmented objects with spectral and shape features
+    and return stand-level or thematic attributes. The interface mirrors
+    ``SegmentationModel`` so future workflows (wetland, LULC, species) can
+    reuse the same pattern.
+
+    Expected CRS/resolution assumptions:
+        - Input ``objects`` GeoDataFrames are in the source CRS at native GSD.
+        - Classifiers do not reproject geometries or resample rasters.
     """
 
+    def __init__(self, config: ClassificationConfig) -> None:
+        """Store job configuration used for inference and audit logging."""
+        self.config = config
+
     @abstractmethod
-    def predict(self, features: Any) -> Any:
-        """Assign thematic class labels to segment feature vectors.
+    def classify_objects(self, objects: gpd.GeoDataFrame) -> ClassificationResult:
+        """Assign thematic attributes to segmented objects.
 
         Args:
-            features: Tabular or structured features per segment/object.
+            objects: GeoDataFrame with geometry and feature columns from
+                segmentation (``area_m2``, ``mean_band_*``, etc.).
 
         Returns:
-            Predicted class label(s) for each input segment.
+            ``ClassificationResult`` with enriched object attributes.
         """
-        ...
+
+    def classify_tile(self, tile_result: TileSegmentationResult) -> ClassificationResult:
+        """Classify objects from a single tile segmentation result.
+
+        Args:
+            tile_result: Output of ``SegmentationModel.segment_tile``.
+
+        Returns:
+            Classification result for the tile's objects.
+        """
+        return self.classify_objects(tile_result.objects)
+
+    @property
+    def config_snapshot(self) -> dict[str, object]:
+        """Return serializable parameters for reproducibility logging."""
+        return self.config.snapshot()
