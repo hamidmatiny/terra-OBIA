@@ -23,6 +23,9 @@ numpy = "^2.0.0"
 geopandas = "^1.0.0"
 shapely = "^2.0.0"
 pyproj = "^3.6.0"
+scikit-image = "^0.24.0"
+torch = "^2.5.0"
+torchvision = "^0.20.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
@@ -57,7 +60,7 @@ select = [
     "TCH",
     "D",
 ]
-ignore = ["D100", "D104", "TC003", "TC002"]
+ignore = ["D100", "D104", "TC003", "TC002", "TC001"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -71,7 +74,17 @@ mypy_path = "core:api:pipeline"
 packages = ["terra_core", "terra_api", "terra_pipeline"]
 
 [[tool.mypy.overrides]]
-module = ["rasterio.*", "geopandas.*", "shapely.*", "xarray.*", "rioxarray.*", "numpy.*"]
+module = [
+    "rasterio.*",
+    "geopandas.*",
+    "shapely.*",
+    "xarray.*",
+    "rioxarray.*",
+    "numpy.*",
+    "skimage.*",
+    "torch.*",
+    "torchvision.*",
+]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

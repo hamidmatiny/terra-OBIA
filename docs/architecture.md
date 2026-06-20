@@ -107,9 +107,9 @@ flowchart LR
 |-------|--------|--------|
 | Raw imagery | External source | GeoTIFF, JPEG2000, or vendor format |
 | Tiled ingestion | `pipeline` | Valid COG with internal tiles and overviews |
-| Segmentation | `core` | Per-tile label or instance masks |
+| Segmentation | `core` | Per-tile label raster, object features, tile merge |
 | Classification | `core` | Thematic class per segment/object |
-| Vectorization | `core` (future) | GeoJSON, GeoPackage, or Shapefile features |
+| Vectorization | `core` | GeoJSON, GeoPackage, or Shapefile features (via segmentation module) |
 | GIS export | `pipeline` (future) | Deliverables for ArcGIS, QGIS, or enterprise GDB |
 
 The API accepts a job request (`source_uri`, `workflow`), delegates to the
@@ -121,8 +121,11 @@ consume the same API.
 Modules communicate through narrow interfaces, not shared global state:
 
 - **`CogReader`** (`core`) — Windowed raster I/O; no knowledge of workflows.
-- **`SegmentationModel` / `ClassificationModel`** (`core`) — Algorithm
-  contracts; no knowledge of storage or HTTP.
+- **`SegmentationModel`** (`core`) — Pluggable tile segmenters (SLIC classical,
+  FCN deep learning) producing label rasters and object features; includes
+  overlap-aware mosaic merge.
+- **`ClassificationModel`** (`core`) — Segment classifier contract; no knowledge
+  of storage or HTTP.
 - **`CogConverter` / `TileGrid` / `TileCatalog` / `StreamingTileReader`** (`pipeline`) — Format conversion, spatial partitioning, catalog persistence, and lazy I/O; no embedded ML logic.
 - **`process_tile`** (`pipeline`) — Pure per-tile task function for local or distributed execution.
 - **`JobRunner`** (`pipeline`) — Wires stages together from workflow config.
@@ -155,13 +158,16 @@ and learned segmentation vs. classical multiresolution segmentation.
 ## Current status
 
 The **pipeline module** implements ingestion, validation, overlapping tile
-generation, SQLite catalog persistence, and lazy streaming reads for COG,
-GeoTIFF, and Sentinel-2 SAFE sources. Segmentation, classification, and
-`terra_core` COG I/O remain stubs. See [pipeline.md](./pipeline.md).
+generation, SQLite catalog persistence, and lazy streaming reads. The
+**segmentation module** implements classical and deep tile segmenters, object
+feature extraction, and overlap-aware mosaic merge. Classification and
+`terra_core` COG I/O remain stubs. See [pipeline.md](./pipeline.md) and
+[segmentation.md](./segmentation.md).
 
 ## Related documentation
 
 - [Pipeline module](./pipeline.md)
+- [Segmentation module](./segmentation.md)
 - [ADR-0001: COG and tiled processing](./decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation over multiresolution segmentation](./decisions/ADR-0002-learned-segmentation.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Documentation and PR standards
