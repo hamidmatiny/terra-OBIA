@@ -17,8 +17,12 @@ uvicorn = { extras = ["standard"], version = "^0.32.0" }
 pydantic = "^2.0"
 pydantic-settings = "^2.0"
 rasterio = "^1.4.0"
+rioxarray = "^0.17.0"
+xarray = "^2024.10.0"
+numpy = "^2.0.0"
 geopandas = "^1.0.0"
 shapely = "^2.0.0"
+pyproj = "^3.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^8.0"
@@ -53,7 +57,7 @@ select = [
     "TCH",
     "D",
 ]
-ignore = ["D100", "D104", "TC003"]
+ignore = ["D100", "D104", "TC003", "TC002"]
 
 [tool.ruff.lint.pydocstyle]
 convention = "google"
@@ -67,7 +71,7 @@ mypy_path = "core:api:pipeline"
 packages = ["terra_core", "terra_api", "terra_pipeline"]
 
 [[tool.mypy.overrides]]
-module = ["rasterio.*", "geopandas.*", "shapely.*"]
+module = ["rasterio.*", "geopandas.*", "shapely.*", "xarray.*", "rioxarray.*", "numpy.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

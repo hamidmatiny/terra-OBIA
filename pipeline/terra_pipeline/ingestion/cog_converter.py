@@ -9,6 +9,9 @@ from __future__ import annotations
 
 from pathlib import Path
 
+from rasterio.enums import Compression
+from rasterio.shutil import copy as rio_copy
+
 
 class CogConverter:
     """Convert a raw GeoTIFF into a valid COG with internal tiling and overviews.
@@ -36,8 +39,18 @@ class CogConverter:
 
         Returns:
             Path to the written COG file.
-
-        Raises:
-            NotImplementedError: Placeholder until GDAL/rasterio COG driver lands.
         """
-        raise NotImplementedError("COG conversion is not yet implemented.")
+        src_path = Path(source)
+        dst_path = Path(destination)
+        dst_path.parent.mkdir(parents=True, exist_ok=True)
+
+        profile = {
+            "driver": "GTiff",
+            "compress": Compression.deflate,
+            "tiled": True,
+            "blockxsize": self.block_size,
+            "blockysize": self.block_size,
+            "COPY_SRC_OVERVIEWS": "YES",
+        }
+        rio_copy(src_path, dst_path, **profile, cog=True)
+        return dst_path

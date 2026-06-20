@@ -38,7 +38,7 @@ terra-OBIA/
 | Module | Responsibility | Depends on |
 |--------|----------------|------------|
 | `core` | Geospatial I/O (COG window reads), segmentation interfaces, classification interfaces | GDAL/rasterio stack |
-| `pipeline` | Raw → COG ingestion, spatial tiling, job orchestration | `core` |
+| `pipeline` | Ingestion (COG/GeoTIFF/Sentinel-2), spatial tiling, SQLite tile catalog, validation, job orchestration | `core` |
 | `api` | REST endpoints, request validation, job status | `pipeline`, `core` |
 | `web` | Operator dashboard (future) | `api` |
 | `infra` | Containers, cloud resources, deployment | all services |
@@ -71,16 +71,22 @@ COG windows; workers never materialize full province mosaics in memory.
 
 ### Tiled processing model
 
-Processing proceeds in spatial tiles aligned to the COG block structure:
+Processing proceeds in spatial tiles with configurable overlap (default 1024×1024
+px windows, 64 px overlap):
 
-1. A `TileGrid` computes pixel windows with configurable overlap (for stitching
-   segmentation outputs at tile boundaries).
-2. Each worker reads one window via `CogReader.read_window`.
-3. Segmentation and classification run on the tile array.
-4. Results are merged, vectorized, and written to export formats.
+1. `TileIngestionPipeline` ingests COG, GeoTIFF, or Sentinel-2 SAFE sources and
+   validates geospatial metadata.
+2. A `TileGrid` computes pixel windows and writes STAC-like records to a SQLite
+   `TileCatalog`.
+3. `StreamingTileReader` lazily reads one tile window at a time via rasterio.
+4. The pure `process_tile(profile, tile)` function handles each tile independently
+   (parallelizable by Dask/Ray later).
+5. Segmentation and classification run on tile arrays in `terra_core` (future).
+6. Results are merged, vectorized, and written to export formats.
 
 Overlap and tile size are workflow parameters stored in job configuration, not
-hard-coded in the engine.
+hard-coded in the engine. See [pipeline.md](./pipeline.md) for ingestion and
+catalog details.
 
 ## Data flow
 
@@ -117,8 +123,8 @@ Modules communicate through narrow interfaces, not shared global state:
 - **`CogReader`** (`core`) — Windowed raster I/O; no knowledge of workflows.
 - **`SegmentationModel` / `ClassificationModel`** (`core`) — Algorithm
   contracts; no knowledge of storage or HTTP.
-- **`CogConverter` / `TileGrid`** (`pipeline`) — Format and spatial
-  partitioning; no embedded ML logic.
+- **`CogConverter` / `TileGrid` / `TileCatalog` / `StreamingTileReader`** (`pipeline`) — Format conversion, spatial partitioning, catalog persistence, and lazy I/O; no embedded ML logic.
+- **`process_tile`** (`pipeline`) — Pure per-tile task function for local or distributed execution.
 - **`JobRunner`** (`pipeline`) — Wires stages together from workflow config.
 
 This separation enables future products without rewriting ingestion or export:
@@ -148,13 +154,14 @@ and learned segmentation vs. classical multiresolution segmentation.
 
 ## Current status
 
-This repository is **scaffolding only**. Placeholder classes raise
-`NotImplementedError` for COG I/O, conversion, and job orchestration.
-Interfaces, tests, documentation, and CI are in place so feature work can
-proceed incrementally with consistent quality gates.
+The **pipeline module** implements ingestion, validation, overlapping tile
+generation, SQLite catalog persistence, and lazy streaming reads for COG,
+GeoTIFF, and Sentinel-2 SAFE sources. Segmentation, classification, and
+`terra_core` COG I/O remain stubs. See [pipeline.md](./pipeline.md).
 
 ## Related documentation
 
+- [Pipeline module](./pipeline.md)
 - [ADR-0001: COG and tiled processing](./decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation over multiresolution segmentation](./decisions/ADR-0002-learned-segmentation.md)
 - [CONTRIBUTING.md](../CONTRIBUTING.md) — Documentation and PR standards

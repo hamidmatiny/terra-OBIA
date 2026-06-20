@@ -125,6 +125,7 @@ poetry run pytest --cov=terra_core --cov=terra_api --cov=terra_pipeline
 ## Documentation
 
 - [Architecture overview](./docs/architecture.md)
+- [Pipeline module (ingestion & tiling)](./docs/pipeline.md)
 - [ADR-0001: COG + tiled processing](./docs/decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation](./docs/decisions/ADR-0002-learned-segmentation.md)
 - [Contributing guide](./CONTRIBUTING.md)
