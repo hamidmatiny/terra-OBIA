@@ -5,8 +5,12 @@ stand delineation, wetland classification, and land cover/land use mapping —
 built for province-scale geospatial datasets and government/enterprise forestry
 customers.
 
-> **Status:** Scaffolding stage. Interfaces, documentation, and CI are in place;
-> segmentation, classification, and COG I/O are not yet implemented.
+> **Status:** Core OBIA pipeline is operational for stand delineation development.
+> **Implemented:** tiled ingestion (COG/GeoTIFF/Sentinel-2), segmentation (classical +
+> deep), classification training/inference, REST API with GIS export, React review
+> dashboard, and folder-based ETL with synthetic data generation.
+> **Partial / planned:** `terra_core` `CogReader` window I/O (stub — pipeline uses
+> rasterio directly), production infra (`infra/`), wetland/LULC product workflows.
 
 ## Repository layout
 
@@ -29,9 +33,9 @@ flow.
 - **[Poetry](https://python-poetry.org/docs/#installation)** 1.8+ for dependency management
 - **Git**
 
-Optional (for future geospatial development):
+Optional (for geospatial development):
 
-- GDAL 3.x (system library; required once COG I/O is implemented)
+- GDAL 3.x (system library; required for rasterio/geopandas)
 
 ## Development setup
 
@@ -90,6 +94,23 @@ curl http://localhost:8000/health
 
 Interactive API docs: http://localhost:8000/docs
 
+## ETL & model training
+
+Generate synthetic development data:
+
+```bash
+poetry run terra-generate-synthetic-aoi --name demo_aoi --size 5km
+```
+
+Train from a folder of mixed downloads:
+
+```bash
+poetry run terra-train-from-folder --input-dir /path/to/folder --aoi-name my_aoi
+```
+
+See [docs/etl.md](./docs/etl.md) for schema details, manifest audit trails, and
+synthetic data limitations.
+
 ## Quality checks
 
 Run the same checks as CI locally:
@@ -120,12 +141,13 @@ poetry run pytest --cov=terra_core --cov=terra_api --cov=terra_pipeline
 |---------|--------|---------|
 | `terra_core` | `from terra_core.io.cog import CogReader` | OBIA engine |
 | `terra_api` | `from terra_api.main import create_app` | REST API |
-| `terra_pipeline` | `from terra_pipeline.tiling.grid import TileGrid` | Ingestion & orchestration |
+| `terra_pipeline` | `from terra_pipeline.tiling.grid import TileGrid` | Ingestion, tiling & ETL |
 
 ## Documentation
 
 - [Architecture overview](./docs/architecture.md)
 - [Pipeline module (ingestion & tiling)](./docs/pipeline.md)
+- [ETL & training data](./docs/etl.md)
 - [Segmentation module](./docs/segmentation.md)
 - [API reference & analyst guide](./docs/api.md)
 - [Review dashboard](./docs/dashboard.md)

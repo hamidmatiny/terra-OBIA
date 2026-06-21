@@ -5,9 +5,9 @@ Trimble eCognition for government and enterprise forestry workflows: stand
 delineation, wetland classification, and land cover/land use (LULC) mapping at
 province-scale extents.
 
-This document describes the system design at the scaffolding stage. Processing
-algorithms are not yet implemented; the focus is on modular boundaries, data
-flow, and big-data handling strategy.
+This document describes the Terra OBIA system design, module boundaries, and
+data flow. See **Current status** below for what is implemented today versus
+planned work.
 
 ## Design goals
 
@@ -26,7 +26,7 @@ flow, and big-data handling strategy.
 terra-OBIA/
 ├── core/           # Python engine: geospatial I/O, segmentation, classification
 ├── api/            # FastAPI service exposing the engine
-├── pipeline/       # Ingestion, COG conversion, tiling, job orchestration
+├── pipeline/       # Ingestion, COG conversion, tiling, ETL, job orchestration
 ├── web/            # React review dashboard (MapLibre, Tailwind)
 ├── infra/          # Docker and Terraform placeholders
 ├── docs/           # Architecture, ADRs, API reference, user guides
@@ -38,7 +38,7 @@ terra-OBIA/
 | Module | Responsibility | Depends on |
 |--------|----------------|------------|
 | `core` | Geospatial I/O (COG window reads), segmentation interfaces, classification interfaces | GDAL/rasterio stack |
-| `pipeline` | Ingestion (COG/GeoTIFF/Sentinel-2), spatial tiling, SQLite tile catalog, validation, job orchestration | `core` |
+| `pipeline` | Ingestion (COG/GeoTIFF/Sentinel-2), spatial tiling, SQLite tile catalog, ETL, validation, job orchestration | `core` |
 | `api` | REST endpoints, job orchestration, GIS export delivery | `pipeline`, `core` |
 | `web` | Analyst review dashboard — map viewer, corrections, job monitoring, exports | `api` |
 | `infra` | Containers, cloud resources, deployment | all services |
@@ -81,8 +81,8 @@ px windows, 64 px overlap):
 3. `StreamingTileReader` lazily reads one tile window at a time via rasterio.
 4. The pure `process_tile(profile, tile)` function handles each tile independently
    (parallelizable by Dask/Ray later).
-5. Segmentation and classification run on tile arrays in `terra_core` (future).
-6. Results are merged, vectorized, and written to export formats.
+5. Segmentation and classification run on tile arrays in `terra_core`.
+6. Results are merged, vectorized, and written to export formats via `terra_core.export`.
 
 Overlap and tile size are workflow parameters stored in job configuration, not
 hard-coded in the engine. See [pipeline.md](./pipeline.md) for ingestion and
@@ -110,7 +110,7 @@ flowchart LR
 | Segmentation | `core` | Per-tile label raster, object features, tile merge |
 | Classification | `core` | Thematic class per segment/object |
 | Vectorization | `core` | GeoJSON, GeoPackage, or Shapefile features (via segmentation module) |
-| GIS export | `pipeline` (future) | Deliverables for ArcGIS, QGIS, or enterprise GDB |
+| GIS export | `core` / `api` | GeoJSON, GeoPackage, Shapefile deliverables |
 
 The API accepts a job request (`source_uri`, `workflow`), delegates to the
 orchestrator, and exposes status endpoints. The React review dashboard in
@@ -160,19 +160,22 @@ and learned segmentation vs. classical multiresolution segmentation.
 ## Current status
 
 The **pipeline module** implements ingestion, validation, overlapping tile
-generation, SQLite catalog persistence, and lazy streaming reads. The
-**segmentation module** implements classical and deep tile segmenters, object
-feature extraction, and overlap-aware mosaic merge. The **classification module**
-implements forest stand delineation with trainable gradient boosting models,
-versioned artifacts, and Markdown accuracy reports. The **API module** exposes
-job submission, progress polling, model listing, and GIS export delivery via
-FastAPI. `terra_core` COG I/O remains a stub. See [pipeline.md](./pipeline.md),
-[segmentation.md](./segmentation.md), [classification.md](./classification.md),
-and [api.md](./api.md).
+generation, SQLite catalog persistence, lazy streaming reads, and ETL utilities
+(synthetic AOI generation, folder-based data loading). The **segmentation module**
+implements classical and deep tile segmenters, object feature extraction, and
+overlap-aware mosaic merge. The **classification module** implements forest stand
+delineation with trainable gradient boosting models, versioned artifacts, and
+Markdown accuracy reports. The **API module** exposes job submission, progress
+polling, analyst review/corrections, model listing, and GIS export delivery via
+FastAPI. The **web dashboard** provides map-based review and correction logging.
+`terra_core.CogReader` remains a stub (window reads use rasterio in pipeline/API).
+See [pipeline.md](./pipeline.md), [etl.md](./etl.md), [segmentation.md](./segmentation.md),
+[classification.md](./classification.md), [api.md](./api.md), and [dashboard.md](./dashboard.md).
 
 ## Related documentation
 
 - [Pipeline module](./pipeline.md)
+- [ETL & training data](./etl.md)
 - [Segmentation module](./segmentation.md)
 - [Classification module](./classification.md)
 - [API reference](./api.md)
