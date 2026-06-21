@@ -14,7 +14,7 @@ customers.
 core/       Python engine — geospatial I/O, segmentation, classification
 api/        FastAPI REST service
 pipeline/   Ingestion, COG conversion, tiling, job orchestration
-web/        Dashboard placeholder (future)
+web/        React review dashboard (MapLibre + Tailwind)
 infra/      Docker and Terraform placeholders
 docs/       Architecture docs and ADRs
 tests/      Test suite
@@ -128,6 +128,7 @@ poetry run pytest --cov=terra_core --cov=terra_api --cov=terra_pipeline
 - [Pipeline module (ingestion & tiling)](./docs/pipeline.md)
 - [Segmentation module](./docs/segmentation.md)
 - [API reference & analyst guide](./docs/api.md)
+- [Review dashboard](./docs/dashboard.md)
 - [ADR-0001: COG + tiled processing](./docs/decisions/ADR-0001-cog-tiled-processing.md)
 - [ADR-0002: Learned segmentation](./docs/decisions/ADR-0002-learned-segmentation.md)
 - [Contributing guide](./CONTRIBUTING.md)

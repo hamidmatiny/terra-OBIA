@@ -152,6 +152,83 @@ def test_full_job_lifecycle(
         assert len(loaded) == results_body["object_count"]
 
 
+def test_review_corrections_and_exports(
+    api_client: TestClient,
+    api_test_raster: Path,
+    trained_model: str,
+) -> None:
+    """Review endpoints: features, corrections, approval, and export download."""
+    submit = api_client.post(
+        "/v1/jobs",
+        json={
+            "source_uri": str(api_test_raster),
+            "workflow": "stand_delineation",
+            "model_id": trained_model,
+            "segmentation": {
+                "backend": "classical",
+                "n_segments": 30,
+                "compactness": 12.0,
+                "tile_size": 256,
+                "overlap": 32,
+            },
+            "export_formats": ["geojson", "gpkg", "shp"],
+        },
+    )
+    job_id = submit.json()["job_id"]
+
+    status = api_client.get(f"/v1/jobs/{job_id}").json()
+    if status["status"] != JobStatus.COMPLETED.value:
+        status = api_client.get(f"/v1/jobs/{job_id}").json()
+    assert status["status"] == JobStatus.COMPLETED.value
+
+    features = api_client.get(f"/v1/jobs/{job_id}/features")
+    assert features.status_code == 200
+    fc = features.json()
+    assert fc["type"] == "FeatureCollection"
+    assert len(fc["features"]) >= 0
+
+    if fc["features"]:
+        object_id = fc["features"][0]["properties"]["object_id"]
+        correction = api_client.post(
+            f"/v1/jobs/{job_id}/corrections",
+            json={
+                "object_id": object_id,
+                "cover_type": "deciduous",
+                "canopy_closure_class": "dense",
+                "analyst_id": "test-analyst",
+                "reason": "Integration test override",
+            },
+        )
+        assert correction.status_code == 200
+        body = correction.json()
+        assert body["cover_type"] == "deciduous"
+        assert body["manual_override"] is True
+
+        listed = api_client.get(f"/v1/jobs/{job_id}/corrections")
+        assert listed.status_code == 200
+        assert len(listed.json()) >= 1
+
+        updated = api_client.get(f"/v1/jobs/{job_id}/features").json()
+        updated_props = next(
+            f["properties"]
+            for f in updated["features"]
+            if f["properties"]["object_id"] == object_id
+        )
+        assert updated_props["cover_type"] == "deciduous"
+
+    approve = api_client.post(
+        f"/v1/jobs/{job_id}/approve",
+        json={"analyst_id": "test-analyst", "notes": "Approved in test"},
+    )
+    assert approve.status_code == 200
+    assert approve.json()["approved"] is True
+
+    for fmt in ("geojson", "gpkg", "shp"):
+        download = api_client.get(f"/v1/jobs/{job_id}/exports/{fmt}")
+        assert download.status_code == 200
+        assert len(download.content) > 0
+
+
 def test_api_key_required_when_configured(monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
     """Requests without API key should be rejected when TERRA_API_KEY is set."""
     monkeypatch.setattr(settings, "api_key", "required-key")

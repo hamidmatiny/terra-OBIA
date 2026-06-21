@@ -27,7 +27,7 @@ terra-OBIA/
 ├── core/           # Python engine: geospatial I/O, segmentation, classification
 ├── api/            # FastAPI service exposing the engine
 ├── pipeline/       # Ingestion, COG conversion, tiling, job orchestration
-├── web/            # Dashboard placeholder (built later)
+├── web/            # React review dashboard (MapLibre, Tailwind)
 ├── infra/          # Docker and Terraform placeholders
 ├── docs/           # Architecture, ADRs, API reference, user guides
 └── tests/          # Cross-package integration and unit tests
@@ -40,7 +40,7 @@ terra-OBIA/
 | `core` | Geospatial I/O (COG window reads), segmentation interfaces, classification interfaces | GDAL/rasterio stack |
 | `pipeline` | Ingestion (COG/GeoTIFF/Sentinel-2), spatial tiling, SQLite tile catalog, validation, job orchestration | `core` |
 | `api` | REST endpoints, job orchestration, GIS export delivery | `pipeline`, `core` |
-| `web` | Operator dashboard (future) | `api` |
+| `web` | Analyst review dashboard — map viewer, corrections, job monitoring, exports | `api` |
 | `infra` | Containers, cloud resources, deployment | all services |
 
 Each module is a separate Python package (`terra_core`, `terra_pipeline`,
@@ -113,8 +113,9 @@ flowchart LR
 | GIS export | `pipeline` (future) | Deliverables for ArcGIS, QGIS, or enterprise GDB |
 
 The API accepts a job request (`source_uri`, `workflow`), delegates to the
-orchestrator, and exposes status endpoints. The web dashboard (future) will
-consume the same API.
+orchestrator, and exposes status endpoints. The React review dashboard in
+`/web` consumes the same API for job monitoring, segment review, corrections,
+and export downloads (see `docs/dashboard.md`).
 
 ## Decoupled module design
 

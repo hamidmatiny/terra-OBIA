@@ -5,10 +5,11 @@ from __future__ import annotations
 import logging
 
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 from terra_api.config import settings
 from terra_api.middleware import RequestLoggingMiddleware
-from terra_api.routes import health, jobs, models
+from terra_api.routes import health, jobs, models, review
 
 
 def create_app() -> FastAPI:
@@ -35,14 +36,26 @@ def create_app() -> FastAPI:
                 "description": "Browse trained classification models and accuracy reports.",
             },
             {
+                "name": "review",
+                "description": "Analyst review, corrections, approvals, and export downloads.",
+            },
+            {
                 "name": "health",
                 "description": "Service health checks.",
             },
         ],
     )
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
     app.add_middleware(RequestLoggingMiddleware)
     app.include_router(health.router, tags=["health"])
     app.include_router(jobs.router, prefix="/v1/jobs", tags=["jobs"])
+    app.include_router(review.router, prefix="/v1/jobs", tags=["review"])
     app.include_router(models.router, prefix="/v1/models", tags=["models"])
     return app
 

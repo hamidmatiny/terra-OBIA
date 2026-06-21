@@ -45,6 +45,9 @@ class JobRecord:
     exports: list[ExportFileInfo] = field(default_factory=list)
     object_count: int = 0
     summary: dict[str, Any] = field(default_factory=dict)
+    approved: bool = False
+    approved_by: str | None = None
+    approved_at: datetime | None = None
 
     def to_progress(self) -> JobProgress | None:
         """Return progress when job is active or complete."""

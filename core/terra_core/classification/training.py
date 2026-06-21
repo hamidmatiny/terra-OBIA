@@ -13,6 +13,7 @@ import pandas as pd
 import sklearn
 from sklearn.ensemble import GradientBoostingClassifier
 from sklearn.model_selection import train_test_split
+from sklearn.utils.class_weight import compute_sample_weight
 
 from terra_core.classification.evaluation import compute_object_classification_metrics
 from terra_core.classification.features import labeled_frame_to_features
@@ -36,6 +37,8 @@ class TrainingConfig:
     random_state: int = 42
     n_estimators: int = 100
     max_depth: int = 3
+    verbose: int = 1
+    class_weight: str | None = None
     cover_type_column: str = "cover_type"
     canopy_closure_column: str = "canopy_closure_class"
 
@@ -100,14 +103,26 @@ def train_stand_classifier(
         n_estimators=config.n_estimators,
         max_depth=config.max_depth,
         random_state=config.random_state,
+        verbose=config.verbose,
     )
     canopy_model = GradientBoostingClassifier(
         n_estimators=config.n_estimators,
         max_depth=config.max_depth,
         random_state=config.random_state,
+        verbose=config.verbose,
     )
-    cover_model.fit(x_train, y_cover_train)
-    canopy_model.fit(x_train, y_canopy_train)
+    cover_weights = (
+        compute_sample_weight(config.class_weight, y_cover_train)
+        if config.class_weight
+        else None
+    )
+    canopy_weights = (
+        compute_sample_weight(config.class_weight, y_canopy_train)
+        if config.class_weight
+        else None
+    )
+    cover_model.fit(x_train, y_cover_train, sample_weight=cover_weights)
+    canopy_model.fit(x_train, y_canopy_train, sample_weight=canopy_weights)
 
     cover_pred = cover_model.predict(x_test)
     canopy_pred = canopy_model.predict(x_test)

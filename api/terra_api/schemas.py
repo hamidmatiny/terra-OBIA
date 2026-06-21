@@ -148,6 +148,59 @@ class ModelSummary(BaseModel):
     accuracy_report_path: str | None = None
 
 
+class CorrectionRequest(BaseModel):
+    """Manual classification override submitted by an analyst."""
+
+    object_id: int = Field(description="Segment object identifier to correct.")
+    cover_type: str = Field(description="Analyst-assigned dominant cover type.")
+    canopy_closure_class: str = Field(
+        description="Analyst-assigned canopy closure class.",
+    )
+    analyst_id: str = Field(
+        description="Analyst username or ID recorded in the correction audit log.",
+    )
+    reason: str = Field(
+        default="",
+        description="Optional review note explaining the override.",
+    )
+
+
+class CorrectionResponse(BaseModel):
+    """Confirmation of a logged manual correction."""
+
+    object_id: int
+    cover_type: str
+    canopy_closure_class: str
+    confidence: float
+    manual_override: bool
+    corrected_by: str
+    corrected_at: str
+
+
+class FeatureCollectionResponse(BaseModel):
+    """GeoJSON FeatureCollection for map display."""
+
+    type: str = Field(default="FeatureCollection")
+    features: list[dict[str, Any]]
+    crs: dict[str, Any] | None = None
+
+
+class JobApproveRequest(BaseModel):
+    """Mark a reviewed job as analyst-approved."""
+
+    analyst_id: str = Field(description="Analyst approving the deliverable.")
+    notes: str = Field(default="", description="Optional approval notes.")
+
+
+class JobApproveResponse(BaseModel):
+    """Approval confirmation."""
+
+    job_id: str
+    approved: bool
+    approved_by: str
+    approved_at: str
+
+
 class ModelListResponse(BaseModel):
     """Available trained models for classification."""
 

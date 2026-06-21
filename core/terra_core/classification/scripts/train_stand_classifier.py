@@ -48,6 +48,12 @@ def main() -> None:
         default=0.25,
         help="Held-out validation fraction.",
     )
+    parser.add_argument(
+        "--feature-columns",
+        type=str,
+        default=None,
+        help="Comma-separated feature column names (default: infer from dataset).",
+    )
     args = parser.parse_args()
 
     labeled = load_labeled_dataset(args.labeled_data)
@@ -55,7 +61,15 @@ def main() -> None:
         training_data_description=args.description,
         test_size=args.test_size,
     )
-    artifact = train_stand_classifier(labeled, config, output_dir=args.output_dir)
+    feature_columns = None
+    if args.feature_columns:
+        feature_columns = [col.strip() for col in args.feature_columns.split(",") if col.strip()]
+    artifact = train_stand_classifier(
+        labeled,
+        config,
+        output_dir=args.output_dir,
+        feature_columns=feature_columns,
+    )
 
     metrics = artifact.metadata.validation_metrics
     report = AccuracyReport(
