@@ -86,7 +86,14 @@ jobs:
 
       - name: Web tests
         working-directory: web
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee vitest-out.txt
+          status=${PIPESTATUS[0]}
+          if [ "$status" -ne 0 ]; then
+            echo "::error title=Vitest failed::$(tail -n 40 vitest-out.txt | tr '\n' ' | ')"
+          fi
+          exit "$status"
 
       - name: Web build
         working-directory: web
