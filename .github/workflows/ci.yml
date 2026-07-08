@@ -71,13 +71,18 @@ jobs:
       - name: Install web dependencies
         working-directory: web
         run: |
+          rm -rf node_modules
           npm ci --include=optional
-          if [ "$(uname -m)" = "x86_64" ]; then
-            ROLLUP_VERSION="$(node -p "require('rollup/package.json').version")"
-            npm install --no-save "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
-          fi
+          ROLLUP_VERSION="$(node -p "require('rollup/package.json').version")"
+          case "$(uname -m)" in
+            x86_64)
+              npm install --no-save --force "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
+              ;;
+            aarch64|arm64)
+              npm install --no-save --force "@rollup/rollup-linux-arm64-gnu@${ROLLUP_VERSION}"
+              ;;
+          esac
           node -e "require('rollup')"
-          node -e "require('vitest')"
 
       - name: Web tests
         working-directory: web
