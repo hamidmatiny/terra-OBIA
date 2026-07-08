@@ -67,12 +67,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "22"
-          cache: npm
-          cache-dependency-path: web/package-lock.json
 
       - name: Install web dependencies
         working-directory: web
-        run: npm ci --include=optional
+        run: |
+          npm ci --include=optional
+          if [ "$(uname -m)" = "x86_64" ]; then
+            ROLLUP_VERSION="$(node -p "require('rollup/package.json').version")"
+            npm install --no-save "@rollup/rollup-linux-x64-gnu@${ROLLUP_VERSION}"
+          fi
+          node -e "require('rollup')"
+          node -e "require('vitest')"
 
       - name: Web tests
         working-directory: web
