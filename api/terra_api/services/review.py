@@ -32,7 +32,8 @@ def load_features_geojson(job_output_dir: Path | str) -> dict[str, Any]:
     if not source.exists():
         msg = f"GeoJSON export not found for job at {output}"
         raise FileNotFoundError(msg)
-    return json.loads(source.read_text(encoding="utf-8"))
+    payload: dict[str, Any] = json.loads(source.read_text(encoding="utf-8"))
+    return payload
 
 
 def apply_correction(

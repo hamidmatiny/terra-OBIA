@@ -1,10 +1,25 @@
 # Terra OBIA Segmentation
 
-The `terra_core.segmentation` module replaces Trimble eCognition multiresolution
-segmentation with a pluggable, learned-first approach suitable for province-scale
-forestry and wetland OBIA workflows (e.g. NB DNRED stand delineation).
+The `terra_core.segmentation` module provides a pluggable segmentation layer for
+province-scale forestry and wetland OBIA workflows (e.g. NB DNRED stand delineation).
+
+**Implementation status:** See [IMPLEMENTATION_STATUS.md](./IMPLEMENTATION_STATUS.md).
+Summary below uses **Implemented** / **Partial** / **Planned** labels per component.
+
+| Component | Status |
+|-----------|--------|
+| `SegmentationModel` interface + factory | **Implemented** |
+| `ClassicalSegmenter` (SLIC) | **Implemented** |
+| `DeepSegmenter` (FCN-ResNet50) | **Partial** — COCO-pretrained baseline, not forestry-fine-tuned |
+| `vectorize_labels` + object features | **Implemented** |
+| `merge_tile_segmentations` | **Implemented** |
+| Merge validation helpers | **Implemented** |
+| JSON reproducibility logging | **Implemented** |
+| SAM / ONNX backends | **Planned** |
 
 ## Design overview
+
+The intended data flow (implemented paths shown solid; planned extensions dashed):
 
 ```mermaid
 flowchart TD
@@ -28,37 +43,42 @@ Every backend implements the same `SegmentationModel` interface and returns:
 
 ## Algorithm choices
 
-### Primary path: deep learning (FCN-ResNet50)
+### Primary path: deep learning (FCN-ResNet50) — **Partial**
 
-Terra OBIA uses a **pretrained FCN-ResNet50** semantic segmenter as the default
-backend (`SegmentationBackend.DEEP`). Rationale:
+The design calls for a **learned semantic segmenter** as the primary backend
+(`SegmentationBackend.DEEP`). An FCN-ResNet50 implementation exists and passes
+tile-level tests, but currently uses **COCO-pretrained ImageNet weights** mapped
+to RGB proxies — not forestry-fine-tuned weights.
 
-| Factor | FCN-ResNet50 | eCognition MRS |
-|--------|--------------|----------------|
+| Factor | FCN-ResNet50 (current) | eCognition MRS |
+|--------|------------------------|----------------|
 | Reproducibility | Versioned weights + logged thresholds | Manual scale/shape/color tuning |
 | Tile parallelism | Stateless GPU inference per tile | Desktop-bound region merging |
-| Transfer learning | Fine-tune encoder on forestry mosaics | Limited ML integration |
+| Transfer learning | Planned: fine-tune on forestry mosaics | Limited ML integration |
 
-**Input assumptions:**
+**Input assumptions (implemented):**
 
 - At least one spectral band; first three bands map to RGB for the ImageNet encoder
-- Native GSD (typically 0.5–10 m for aerial/ Sentinel-2 10 m stacks)
+- Native GSD (typically 0.5–10 m for aerial / Sentinel-2 10 m stacks)
 - Additional bands are ignored until forestry fine-tuning is implemented
 
 **Parameters:**
 
 - `confidence_threshold` (default `0.5`) — pixels below max softmax probability become background
 
-**Future work:** Segment Anything Model (SAM) will be added as an alternative
-`SegmentationModel` backend for prompt-based instance segmentation.
+**Planned:** Segment Anything Model (SAM) as an alternative `SegmentationModel`
+backend for prompt-based instance segmentation; forestry fine-tuned weights.
 
-### Baseline path: classical SLIC
+### Baseline path: classical SLIC — **Implemented**
 
 `ClassicalSegmenter` uses **scikit-image SLIC** superpixels for:
 
 - Comparison against eCognition-style workflows
 - Environments without GPU / torch
 - Regression testing and algorithm benchmarking
+
+This is **not** eCognition multiresolution segmentation (MRS) — it is a SLIC
+superpixel baseline with analogous tuning parameters.
 
 **Parameters (logged with every run):**
 
@@ -68,7 +88,7 @@ backend (`SegmentationBackend.DEEP`). Rationale:
 | `compactness` | Spectral vs spatial balance | Shape/compactness |
 | `sigma` | Pre-smoothing Gaussian sigma | Smoothing |
 
-## Internal representation
+## Internal representation — **Implemented**
 
 ```python
 from terra_core.segmentation import (
@@ -98,7 +118,7 @@ tile_result = segmenter.segment_tile(
 | `objects` | GeoDataFrame with geometry + features |
 | `config_snapshot` | JSON-serializable parameters for audit |
 
-## Tile-boundary merging
+## Tile-boundary merging — **Implemented**
 
 Province-scale mosaics are processed in overlapping tiles (default 64 px overlap
 from the pipeline). Without explicit merge logic, objects are split at seams —
@@ -107,7 +127,7 @@ a common failure mode in tiled OBIA.
 ### Ownership-weighted merge
 
 `merge_tile_segmentations()` reconciles overlap regions using **interior
-ownership weighting**:
+ownership weighting** (design and implementation):
 
 1. For each tile, compute a per-pixel weight = distance to nearest tile edge
 2. Mosaic border edges are exempt (outer tiles keep full extent)
@@ -129,12 +149,14 @@ context = MergeContext(
 merged = merge_tile_segmentations(tile_results, context, data_by_tile, band_names=config.band_names)
 ```
 
-### Validation helpers
+**Tests:** `test_merge_no_missing_area_at_boundaries`, `test_merge_preserves_total_labeled_area`.
+
+### Validation helpers — **Implemented**
 
 - `validate_merge_coverage()` — ensures no valid pixels are unlabeled after merge
 - `detect_duplicate_overlap_objects()` — flags duplicate polygons (IoU > 0.5) near seams
 
-## Reproducibility logging
+## Reproducibility logging — **Implemented**
 
 Every `segment_tile()` call emits structured JSON via `terra_core.segmentation`:
 
@@ -153,9 +175,11 @@ Every `segment_tile()` call emits structured JSON via `terra_core.segmentation`:
 ```
 
 Government customers can correlate delineation outputs with logged parameters
-for audit and reproduction.
+for audit and reproduction. **Test:** `test_config_snapshot_logged`.
 
-## Adding a new backend
+## Adding a new backend — **Planned pattern / partial registry**
+
+To add a backend (e.g. SAM):
 
 1. Subclass `SegmentationModel` in `core/terra_core/segmentation/`
 2. Implement `segment_tile()` returning `TileSegmentationResult`
@@ -166,11 +190,11 @@ for audit and reproduction.
 7. Document input band/resolution assumptions in the class docstring
 8. Add tests under `tests/test_segmentation.py`
 
-Example skeleton:
+Example skeleton (planned SAM backend):
 
 ```python
 class SamSegmenter(SegmentationModel):
-    """SAM-based segmenter (future)."""
+    """SAM-based segmenter (planned)."""
 
     def segment_tile(self, data, *, tile_id, tile_row, tile_col, col_off, row_off, transform, nodata=None):
         labels = ...  # (H, W) int32
@@ -180,6 +204,7 @@ class SamSegmenter(SegmentationModel):
 
 ## Related documentation
 
+- [Implementation status](./IMPLEMENTATION_STATUS.md)
 - [Architecture overview](./architecture.md)
 - [Pipeline module (tiling/overlap)](./pipeline.md)
 - [ADR-0002: Learned segmentation](./decisions/ADR-0002-learned-segmentation.md)

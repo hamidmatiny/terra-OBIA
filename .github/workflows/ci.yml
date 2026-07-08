@@ -47,6 +47,9 @@ jobs:
       - name: Ruff format check
         run: poetry run ruff format --check .
 
+      - name: Doc status guardrail
+        run: bash scripts/check_doc_status.sh
+
       - name: Mypy type check
         run: poetry run mypy core api pipeline
 

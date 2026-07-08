@@ -63,9 +63,9 @@ Every pull request must update relevant documentation:
 
 | Change type | Required doc update |
 |-------------|---------------------|
-| New module or public API | Module docstring + update `docs/architecture.md` if boundaries shift |
+| New module or public API | Module docstring + update `docs/architecture.md` if boundaries shift + `docs/IMPLEMENTATION_STATUS.md` |
 | New geospatial function | CRS/resolution assumptions in docstring |
-| New workflow or data format | ADR or architecture section |
+| New workflow or data format | ADR or architecture section + `docs/IMPLEMENTATION_STATUS.md` if shipping or stubbing |
 | API endpoint change | Route docstring + future OpenAPI notes |
 | Configuration / env var | `.env.example` and README |
 
@@ -84,6 +84,7 @@ All changes must pass before merge (enforced by CI):
 ```bash
 poetry run ruff check .
 poetry run ruff format --check .
+bash scripts/check_doc_status.sh
 poetry run mypy core api pipeline
 poetry run pytest
 ```

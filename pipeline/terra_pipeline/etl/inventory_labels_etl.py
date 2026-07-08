@@ -141,9 +141,7 @@ def process_inventory_labels(
     """
     valid, message, meta = validate_vector(source)
     schema_raw = meta.get("detected_schema", {})
-    schema: dict[str, str | None] = (
-        schema_raw if isinstance(schema_raw, dict) else {}
-    )
+    schema: dict[str, str | None] = schema_raw if isinstance(schema_raw, dict) else {}
     if not valid:
         if manifest:
             manifest.add(

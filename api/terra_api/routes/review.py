@@ -164,7 +164,11 @@ def approve_job(
     description="Download Shapefile (zip), GeoPackage, or GeoJSON deliverable.",
     response_class=FileResponse,
 )
-def download_export(job_id: str, export_format: ExportFormatOption, _: AuthenticatedKey) -> FileResponse:
+def download_export(
+    job_id: str,
+    export_format: ExportFormatOption,
+    _: AuthenticatedKey,
+) -> FileResponse:
     """Download an export file for a completed job."""
     record = job_store.get(job_id)
     if record is None:

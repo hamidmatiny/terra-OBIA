@@ -159,21 +159,24 @@ and learned segmentation vs. classical multiresolution segmentation.
 
 ## Current status
 
-The **pipeline module** implements ingestion, validation, overlapping tile
-generation, SQLite catalog persistence, lazy streaming reads, and ETL utilities
-(synthetic AOI generation, folder-based data loading). The **segmentation module**
-implements classical and deep tile segmenters, object feature extraction, and
-overlap-aware mosaic merge. The **classification module** implements forest stand
-delineation with trainable gradient boosting models, versioned artifacts, and
-Markdown accuracy reports. The **API module** exposes job submission, progress
-polling, analyst review/corrections, model listing, and GIS export delivery via
-FastAPI. The **web dashboard** provides map-based review and correction logging.
-`terra_core.CogReader` remains a stub (window reads use rasterio in pipeline/API).
-See [pipeline.md](./pipeline.md), [etl.md](./etl.md), [segmentation.md](./segmentation.md),
-[classification.md](./classification.md), [api.md](./api.md), and [dashboard.md](./dashboard.md).
+See **[Implementation Status](./IMPLEMENTATION_STATUS.md)** for the authoritative
+component matrix (status, test evidence, last verified date). At a glance:
+
+- **Implemented:** pipeline ingestion/tiling, SLIC classical segmenter, tile merge,
+  gradient-boosting stand classifier (train + inference), REST API with GIS export
+  and analyst review, web dashboard, ETL utilities.
+- **Partial:** deep segmenter runs FCN-ResNet50 inference with COCO-pretrained
+  weights — functional baseline, not forestry-fine-tuned.
+- **Not started:** `terra_core.CogReader` (pipeline/API use rasterio directly),
+  `pipeline.JobRunner` orchestration stub, production `infra/`.
+
+Module docs: [pipeline.md](./pipeline.md), [etl.md](./etl.md),
+[segmentation.md](./segmentation.md), [classification.md](./classification.md),
+[api.md](./api.md), [dashboard.md](./dashboard.md).
 
 ## Related documentation
 
+- [Implementation status](./IMPLEMENTATION_STATUS.md)
 - [Pipeline module](./pipeline.md)
 - [ETL & training data](./etl.md)
 - [Segmentation module](./segmentation.md)

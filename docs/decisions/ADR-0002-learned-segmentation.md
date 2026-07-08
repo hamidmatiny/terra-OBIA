@@ -49,9 +49,9 @@ Specifically:
    workflow).
 2. **Tile-native inference** — Models consume COG windows directly; training
    and inference share the same tile geometry defined by `TileGrid`.
-3. **Classical MRS** — Not implemented in v1. May be offered later as an
-   optional fallback for edge cases or regulatory environments that require
-   algorithm transparency comparable to eCognition.
+3. **Classical MRS (eCognition-style)** — Not implemented. A **SLIC superpixel
+   baseline** (`ClassicalSegmenter`) is implemented for comparison, regression
+   testing, and CPU-only environments.
 4. **Parameter reproducibility** — Model weights, training data version, and
    inference config are versioned artifacts stored alongside job records.
 
@@ -124,11 +124,22 @@ requirements.
 
 ### Follow-up work
 
-- Select baseline architecture for forestry stand delineation (future ADR)
-- Define training data schema and labelling guidelines
-- Implement `SegmentationModel.predict` with ONNX or PyTorch inference
-- Establish model registry and A/B evaluation protocol
-- Document comparison benchmarks against eCognition MRS on reference AOIs
+**Done (as of 2026-06-21):**
+
+- Baseline architecture selected: FCN-ResNet50 semantic segmentation (`DeepSegmenter`)
+- `SegmentationModel.segment_tile()` implemented with PyTorch inference (classical SLIC + deep FCN)
+- SLIC classical baseline for benchmarking and CPU-only workflows
+- Ownership-weighted `merge_tile_segmentations()` with coverage validation tests
+- JSON reproducibility logging per tile run
+
+**Remaining:**
+
+- Forestry fine-tuning on regional labeled tiles (replace COCO-pretrained weights)
+- Segment Anything Model (SAM) backend implementing `SegmentationModel`
+- ONNX export path for deployment-optimized inference
+- Model registry and A/B evaluation protocol for segmentation (classification registry exists)
+- Documented comparison benchmarks against eCognition MRS on reference AOIs
+- Multiresolution segmentation (true eCognition MRS) as optional regulatory fallback
 
 ## References
 

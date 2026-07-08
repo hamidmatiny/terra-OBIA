@@ -27,9 +27,7 @@ def infer_feature_columns(objects: gpd.GeoDataFrame | pd.DataFrame) -> list[str]
         Ordered list of numeric column names suitable for sklearn models.
     """
     spectral = sorted(
-        col
-        for col in objects.columns
-        if col.startswith("mean_") or col.startswith("std_")
+        col for col in objects.columns if col.startswith("mean_") or col.startswith("std_")
     )
     shape_cols = [col for col in DEFAULT_FEATURE_COLUMNS if col in objects.columns]
     return shape_cols + spectral

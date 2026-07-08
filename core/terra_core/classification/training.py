@@ -112,14 +112,10 @@ def train_stand_classifier(
         verbose=config.verbose,
     )
     cover_weights = (
-        compute_sample_weight(config.class_weight, y_cover_train)
-        if config.class_weight
-        else None
+        compute_sample_weight(config.class_weight, y_cover_train) if config.class_weight else None
     )
     canopy_weights = (
-        compute_sample_weight(config.class_weight, y_canopy_train)
-        if config.class_weight
-        else None
+        compute_sample_weight(config.class_weight, y_canopy_train) if config.class_weight else None
     )
     cover_model.fit(x_train, y_cover_train, sample_weight=cover_weights)
     canopy_model.fit(x_train, y_canopy_train, sample_weight=canopy_weights)

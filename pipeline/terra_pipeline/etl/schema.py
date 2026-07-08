@@ -58,9 +58,7 @@ INVENTORY_ALIASES: Final[dict[str, str]] = {
 RASTER_EXTENSIONS: Final[frozenset[str]] = frozenset(
     {".tif", ".tiff", ".geotiff", ".jp2", ".j2k", ".img"}
 )
-VECTOR_EXTENSIONS: Final[frozenset[str]] = frozenset(
-    {".shp", ".gpkg", ".geojson", ".json", ".csv"}
-)
+VECTOR_EXTENSIONS: Final[frozenset[str]] = frozenset({".shp", ".gpkg", ".geojson", ".json", ".csv"})
 ARCHIVE_EXTENSIONS: Final[frozenset[str]] = frozenset({".zip"})
 
 BAND_NAMES_RGBN: Final[tuple[str, ...]] = ("band_1", "band_2", "band_3", "band_4")

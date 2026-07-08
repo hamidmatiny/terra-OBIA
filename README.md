@@ -5,12 +5,10 @@ stand delineation, wetland classification, and land cover/land use mapping —
 built for province-scale geospatial datasets and government/enterprise forestry
 customers.
 
-> **Status:** Core OBIA pipeline is operational for stand delineation development.
-> **Implemented:** tiled ingestion (COG/GeoTIFF/Sentinel-2), segmentation (classical +
-> deep), classification training/inference, REST API with GIS export, React review
-> dashboard, and folder-based ETL with synthetic data generation.
-> **Partial / planned:** `terra_core` `CogReader` window I/O (stub — pipeline uses
-> rasterio directly), production infra (`infra/`), wetland/LULC product workflows.
+> **Status:** See the canonical [Implementation Status](./docs/IMPLEMENTATION_STATUS.md)
+> table (verified against passing tests). Summary: stand delineation pipeline is
+> operational — ingestion, SLIC + FCN baselines, gradient-boosting classification,
+> REST API, review dashboard, and ETL. `CogReader` and production `infra/` remain stubs.
 
 ## Repository layout
 
@@ -145,6 +143,7 @@ poetry run pytest --cov=terra_core --cov=terra_api --cov=terra_pipeline
 
 ## Documentation
 
+- [Implementation status](./docs/IMPLEMENTATION_STATUS.md) — canonical built vs. planned table
 - [Architecture overview](./docs/architecture.md)
 - [Pipeline module (ingestion & tiling)](./docs/pipeline.md)
 - [ETL & training data](./docs/etl.md)
