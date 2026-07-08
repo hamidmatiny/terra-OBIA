@@ -37,11 +37,35 @@ boundaries.
 from terra_core.classification import ClassificationConfig, create_classifier
 
 classifier = create_classifier(
-    ClassificationConfig(model_artifact_path="models/stand_v20250620")
+    ClassificationConfig(model_artifact_path="models/stand_geonb_v1_balanced")
 )
 result = classifier.classify_objects(segmentation_result.objects)
 print(result.objects[["object_id", "cover_type", "canopy_closure_class", "confidence"]])
 ```
+
+## ETL → OBIA model handoff
+
+Trained GeoNB stand classifiers live in **terra-obia-etl**
+(`models/stand_geonb_v1_balanced/`). terra-OBIA does not commit those weights.
+Register them with one command (sibling checkout assumed):
+
+```bash
+# From terra-OBIA, with ../terra-obia-etl present
+poetry run terra-register-etl-model
+```
+
+This symlinks (or `--mode copy`) the ETL artifact into `models/` so
+`GET /v1/models` and job submission can resolve `model_id`. Then predict:
+
+```bash
+poetry run terra-predict-stands path/to/objects.gpkg \
+  --model-dir models/stand_geonb_v1_balanced \
+  --output predictions.gpkg
+```
+
+Integration coverage: `tests/test_etl_model_handoff.py` (loads the real ETL
+artifact and asserts cover_type + canopy_closure predictions).
+CI checks out the ETL model directory sparsely so the handoff test runs in Actions.
 
 ## Classifier backend
 

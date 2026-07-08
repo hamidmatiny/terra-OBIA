@@ -19,12 +19,13 @@ adding tests, stubs, or shipping new modules.
 | Segmentation reproducibility logging | **Implemented** | `test_config_snapshot_logged` |
 | `ClassificationModel` / `StandDelineationClassifier` | **Implemented** | `test_stand_classifier_predicts_attributes`, `test_create_classifier_factory` |
 | Gradient boosting training / artifacts | **Implemented** | `test_train_and_save_model_artifact`, `test_load_model_round_trip` |
+| ETL → OBIA model handoff | **Implemented** | `terra-register-etl-model`; `test_etl_model_handoff.py` uses real `stand_geonb_v1_balanced` |
+| Committed trained model weights | **None in terra-OBIA** | Weights live in terra-obia-etl `models/`; register via CLI (symlink/copy) |
 | `TileGrid` / ingestion / validation | **Implemented** | `test_pipeline.py` (9), `test_tiling.py` (5) |
 | REST API (jobs, models, review, export) | **Implemented** | `test_full_job_lifecycle`, `test_review_corrections_and_exports` |
 | Web review dashboard | **Implemented** | `web/src/__tests__/` (9 Vitest tests) |
 | ETL (synthetic AOI, folder loader) | **Implemented** | `test_etl_synthetic.py` (4), `test_etl_folder_loader.py` (3) |
 | `pipeline.JobRunner` (`orchestration/runner.py`) | **Not started** (stub) | `submit()` raises `NotImplementedError`; API uses `terra_api.services.job_runner` |
-| Committed trained model weights | **None in repo** | Models created in `tmp_path` during tests only |
 
 ### Coverage snapshot (2026-06-21)
 

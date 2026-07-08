@@ -109,6 +109,19 @@ poetry run terra-train-from-folder --input-dir /path/to/folder --aoi-name my_aoi
 See [docs/etl.md](./docs/etl.md) for schema details, manifest audit trails, and
 synthetic data limitations.
 
+## Use a terra-obia-etl trained model
+
+With `terra-obia-etl` checked out as a sibling directory:
+
+```bash
+poetry run terra-register-etl-model
+poetry run terra-predict-stands path/to/objects.gpkg \
+  --model-dir models/stand_geonb_v1_balanced \
+  --output predictions.gpkg
+```
+
+Details: [docs/classification.md](./docs/classification.md) (ETL → OBIA model handoff).
+
 ## Quality checks
 
 Run the same checks as CI locally:

@@ -14,6 +14,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout terra-obia-etl model artifacts
+        uses: actions/checkout@v4
+        with:
+          repository: hamidmatiny/terra-obia-etl
+          path: terra-obia-etl
+          sparse-checkout: |
+            models/stand_geonb_v1_balanced
+          sparse-checkout-cone-mode: false
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:

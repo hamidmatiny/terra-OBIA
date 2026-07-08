@@ -40,6 +40,8 @@ types-shapely = "^2.0.0"
 [tool.poetry.scripts]
 terra-api = "terra_api.main:run"
 terra-train-stand-classifier = "terra_core.classification.scripts.train_stand_classifier:main"
+terra-register-etl-model = "terra_core.classification.scripts.register_etl_model:main"
+terra-predict-stands = "terra_core.classification.scripts.predict_stands:main"
 terra-generate-synthetic-aoi = "terra_pipeline.etl.scripts.generate_synthetic:main"
 terra-train-from-folder = "terra_pipeline.etl.scripts.train_from_folder:main"
 
