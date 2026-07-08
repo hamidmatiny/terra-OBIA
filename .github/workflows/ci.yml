@@ -87,11 +87,20 @@ jobs:
       - name: Web tests
         working-directory: web
         run: |
-          set -o pipefail
-          npm test 2>&1 | tee vitest-out.txt
-          status=${PIPESTATUS[0]}
+          set +e
+          npm test > vitest-out.txt 2>&1
+          status=$?
+          cat vitest-out.txt
           if [ "$status" -ne 0 ]; then
-            echo "::error title=Vitest failed::$(tail -n 40 vitest-out.txt | tr '\n' ' | ')"
+            {
+              echo "Vitest failed with exit code ${status}"
+              echo "----- last 60 lines -----"
+              tail -n 60 vitest-out.txt
+            } > vitest-summary.txt
+            # Emit each line as an annotation-friendly message (avoid one huge line).
+            while IFS= read -r line; do
+              echo "::error::${line}"
+            done < vitest-summary.txt
           fi
           exit "$status"
 
