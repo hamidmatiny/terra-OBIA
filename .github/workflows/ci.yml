@@ -86,7 +86,9 @@ jobs:
 
       - name: Web tests
         working-directory: web
-        run: npm test
+        run: |
+          node -e "require('rollup'); console.log('rollup ok')"
+          npx vitest run --maxWorkers=1 --reporter=verbose
 
       - name: Web build
         working-directory: web

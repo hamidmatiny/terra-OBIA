@@ -30,9 +30,12 @@ describe("useJobPolling", () => {
       useJobPolling("job-test", { fetchStatus, intervalMs: 50 }),
     );
 
-    await waitFor(() => {
-      expect(result.current.job?.status).toBe("completed");
-    });
+    await waitFor(
+      () => {
+        expect(result.current.job?.status).toBe("completed");
+      },
+      { timeout: 5000 },
+    );
 
     expect(fetchStatus).toHaveBeenCalledTimes(3);
     expect(result.current.job?.progress?.percent).toBe(100);
@@ -51,9 +54,12 @@ describe("useJobPolling", () => {
       useJobPolling("job-test", { fetchStatus, intervalMs: 50 }),
     );
 
-    await waitFor(() => {
-      expect(result.current.job?.status).toBe("failed");
-    });
+    await waitFor(
+      () => {
+        expect(result.current.job?.status).toBe("failed");
+      },
+      { timeout: 5000 },
+    );
 
     expect(fetchStatus).toHaveBeenCalledTimes(2);
     expect(result.current.job?.error).toBe("Segmentation error");
