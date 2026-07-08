@@ -88,19 +88,30 @@ jobs:
         working-directory: web
         run: |
           set +e
-          npm test > vitest-out.txt 2>&1
+          # Strip ANSI so annotations stay readable; keep full log for the step.
+          npm test > vitest-out.raw.txt 2>&1
           status=$?
+          sed 's/\x1b\[[0-9;]*m//g' vitest-out.raw.txt > vitest-out.txt
           cat vitest-out.txt
           if [ "$status" -ne 0 ]; then
+            # Prefer the error/fail block; fall back to the whole log.
             {
               echo "Vitest failed with exit code ${status}"
-              echo "----- last 60 lines -----"
-              tail -n 60 vitest-out.txt
+              if grep -nE 'FAIL|Error|RangeError|Cannot find|Unhandled|❯' vitest-out.txt >/tmp/vitest-hits.txt; then
+                echo "----- matching lines -----"
+                cat /tmp/vitest-hits.txt
+              fi
+              echo "----- full log -----"
+              cat vitest-out.txt
             } > vitest-summary.txt
-            # Emit each line as an annotation-friendly message (avoid one huge line).
-            while IFS= read -r line; do
-              echo "::error::${line}"
-            done < vitest-summary.txt
+            # One annotation with the full summary (GitHub truncates long messages).
+            python3 - <<'PY'
+from pathlib import Path
+text = Path("vitest-summary.txt").read_text(encoding="utf-8", errors="replace")
+# Keep under annotation size limits while preserving the failure.
+snippet = text[-3500:]
+print(f"::error title=Vitest failed::{snippet.replace(chr(10), '%0A')}")
+PY
           fi
           exit "$status"
 

@@ -20,17 +20,16 @@ export default defineConfig({
     environment: "happy-dom",
     setupFiles: "./src/test/setup.ts",
     globals: true,
-    // Fixed pool size: avoid Tinypool RangeError when CI runners report low
-    // CPU counts or when CLI/env overrides leave minWorkers > maxWorkers.
+    // Explicit fixed bounds — never derive min/max from runner CPU count.
+    // (CI previously failed with Tinypool RangeError when --maxWorkers=1 left
+    // minWorkers at the auto CPU-derived value, so min > max.)
     pool: "forks",
-    fileParallelism: false,
     minWorkers: 1,
-    maxWorkers: 1,
+    maxWorkers: 2,
     poolOptions: {
       forks: {
-        singleFork: true,
         minForks: 1,
-        maxForks: 1,
+        maxForks: 2,
       },
     },
   },
